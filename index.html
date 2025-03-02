@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Conditional Dropdown Example</title>
+    <!-- (Optional) Include Select2 for searching in the description dropdown -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .hidden {
+        display: none;
+      }
+    </style>
+    <link
+      href="https://fonts.googleapis.com/css?family=Open Sans"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Open Sans";
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Erforderliche Fachkunden im Strahlenschutz</h2>
+
+    <!-- Top-level radio buttons -->
+    <p>
+      <input
+        type="radio"
+        name="topLevel"
+        id="radio_strahlenschutz"
+        value="Strahlenschutz"
+      />
+      <label for="radio_strahlenschutz">Strahlenschutz</label>
+    </p>
+    <p>
+      <input
+        type="radio"
+        name="topLevel"
+        id="radio_roentgen"
+        value="Röntgenanwendung"
+      />
+      <label for="radio_roentgen">Röntgenanwendung</label>
+    </p>
+
+    <!-- Container for Strahlenschutz years -->
+    <div id="container_strahlenschutz" style="display: none; margin-left: 2em">
+      <h3>Jahr der Richtlinie (Strahlenschutz)</h3>
+      <p>
+        <input
+          type="radio"
+          name="strahlenschutz_year"
+          id="strahl_1979"
+          value="1979"
+        />
+        <label for="strahl_1979"
+          >Richtlinie Strahlenschutz in der Medizin 1979</label
+        >
+      </p>
+      <p>
+        <input
+          type="radio"
+          name="strahlenschutz_year"
+          id="strahl_1992"
+          value="1992"
+        />
+        <label for="strahl_1992"
+          >Richtlinie Strahlenschutz in der Medizin 1992</label
+        >
+      </p>
+      <p>
+        <input
+          type="radio"
+          name="strahlenschutz_year"
+          id="strahl_2003"
+          value="2003"
+        />
+        <label for="strahl_2003"
+          >Richtlinie Strahlenschutz in der Medizin 2003</label
+        >
+      </p>
+      <p>
+        <input
+          type="radio"
+          name="strahlenschutz_year"
+          id="strahl_2011"
+          value="2011"
+        />
+        <label for="strahl_2011"
+          >Richtlinie Strahlenschutz in der Medizin 2011</label
+        >
+      </p>
+    </div>
+
+    <!-- Container for Röntgenanwendung years -->
+    <div id="container_roentgen" style="display: none; margin-left: 2em">
+      <h3>Jahr der Richtlinie (Röntgenanwendung)</h3>
+      <p>
+        <input
+          type="radio"
+          name="roentgen_year"
+          id="roentgen_1987"
+          value="1987"
+        />
+        <label for="roentgen_1987"
+          >Richtlinie Fachkunde und Kenntnisse im Strahlenschutz 1987</label
+        >
+      </p>
+      <p>
+        <input
+          type="radio"
+          name="roentgen_year"
+          id="roentgen_1990"
+          value="1990"
+        />
+        <label for="roentgen_1990"
+          >Richtlinie Fachkunde und Kenntnisse im Strahlenschutz 1990</label
+        >
+      </p>
+      <p>
+        <input
+          type="radio"
+          name="roentgen_year"
+          id="roentgen_2005"
+          value="2005"
+        />
+        <label for="roentgen_2005"
+          >Richtlinie Fachkunde und Kenntnisse im Strahlenschutz 2005</label
+        >
+      </p>
+    </div>
+
+    <!-- Container that holds the dropdowns once the user has picked a year -->
+    <div
+      id="qualificationsContainer"
+      class="hidden"
+      style="margin-left: 2em; margin-top: 20px"
+    >
+      <h3>Wählbare Fachkunde</h3>
+
+      <label for="qualificationDesc">Beschreibung:</label><br />
+      <select
+        id="qualificationDesc"
+        style="width: 400px"
+        onchange="onDescChange()"
+      >
+        <!-- We'll dynamically fill this with the relevant { desc } items -->
+        <!-- Also note: For placeholder + allowClear, we'll add an empty <option value="">  -->
+        <option value=""></option>
+      </select>
+
+      <br /><br />
+
+      <label for="qualificationAbbrev">Abkürzung:</label><br />
+      <select
+        id="qualificationAbbrev"
+        style="width: 200px"
+        onchange="onAbbrevChange()"
+      >
+        <!-- We'll dynamically fill this with the relevant { abbrev } items -->
+        <option value="">-- keine Auswahl --</option>
+      </select>
+
+      <br /><br />
+      <button type="button" onclick="clearSelections()">
+        Auswahl zurücksetzen
+      </button>
+    </div>
+
+    <!-- A submit button to post the form (if you want a real form) -->
+    <p>
+      <button type="submit" style="margin-top: 20px">Absenden</button>
+    </p>
+
+    <script>
+      // ----------------------------------------------
+      // 1) Our data structure with all possible combos
+      // ----------------------------------------------
+      const dataMap = {
+        Strahlenschutz: {
+          1979: [
+            {
+              abbrev: "2.1.1",
+              desc: "Offene radioaktive Stoffe - Gesamtgebiet (Diagnostik und Therapie)",
+            },
+
+            { abbrev: "2.1.2", desc: "Offene radioaktive Stoffe - Diagnostik" },
+
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organgebundene Diagnostik",
+            },
+
+            { abbrev: "2.1.4", desc: "Offene radioaktive Stoffe - Therapie" },
+
+            {
+              abbrev: "2.2.1",
+              desc: "Umschlossene radioaktive Stoffe zur interstitiellen und intrakavitären Therapie sowie zur Kontakttherapie und zur Implantation (Strahler) - Alle Anwendungsgebiete",
+            },
+
+            {
+              abbrev: "2.2.2",
+              desc: "Umschlossene radioaktive Stoffe zur interstitiellen und intrakavitären Therapie sowie zur Kontakttherapie und zur Implantation (Strahler) - Teilgebiete (Beschränkung auf ein Organ bzw. ein Organsystem)",
+            },
+
+            {
+              abbrev: "2.2.3",
+              desc: "Umschlossene radioaktive Stoffe zur interstitiellen und intrakavitären Therapie sowie zur Kontakttherapie und zur Implantation (Strahler) - Anwendung umschlossener Betastrahler zur Hauttherapie",
+            },
+            {
+              abbrev: "2.3",
+              desc: "Anlagen zur Erzeugung ionisierender Strahlen (Beschleuniger)",
+            },
+            {
+              abbrev: "2.4",
+              desc: "Bestrahlungseinrichtungen mit radioaktiven Quellen (Gammabestrahlungseinrichtungen)",
+            },
+          ],
+          1992: [
+            {
+              abbrev: "2.1.1",
+              desc: "Offene radioaktive Stoffe - Gesamtgebiet (Untersuchung und Behandlung)",
+            },
+            {
+              abbrev: "2.1.2",
+              desc: "Offene radioaktive Stoffe - Untersuchung",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Untersuchung",
+            },
+            {
+              abbrev: "2.2",
+              desc: "Untersuchung mit umschlossenen radioaktiven Stoffen",
+            },
+            {
+              abbrev: "2.3.1",
+              desc: "Umschlossene radioaktive Stoffe zur Brachytherapie (Strahler und Afterloadingeinrichtungen) - Alle Anwendungsgebiete",
+            },
+            {
+              abbrev: "2.3.2",
+              desc: "Umschlossene radioaktive Stoffe zur Brachytherapie (Strahler und Afterloadingeinrichtungen) - Teilgebiete (Beschränkung auf ein Organ bzw. ein Organsystem)",
+            },
+            {
+              abbrev: "2.3.3",
+              desc: "Umschlossene radioaktive Stoffe zur Brachytherapie (Strahler und Afterloadingeinrichtungen) - Anwendung umschlossener Betastrahler zur Hautbehandlung",
+            },
+            {
+              abbrev: "2.4",
+              desc: "Anlagen zur Erzeugung ionisierender Strahlen (Beschleuniger)",
+            },
+            {
+              abbrev: "2.5",
+              desc: "Bestrahlungseinrichtungen mit radioaktiven Quellen (Gammabestrahlungseinrichtungen)",
+            },
+          ],
+          2003: [
+            {
+              abbrev: "2.1.1",
+              desc: "Offene radioaktive Stoffe - Gesamtgebiet (Untersuchung und Behandlung)",
+            },
+            {
+              abbrev: "2.1.2",
+              desc: "Offene radioaktive Stoffe - Untersuchung",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Untersuchung",
+            },
+            {
+              abbrev: "2.2.1",
+              desc: "Strahlenbehandlung (Teletherapie und Brachytherapie) - Gesamtgebiet",
+            },
+            {
+              abbrev: "2.2.2.1",
+              desc: "Strahlenbehandlung (Teletherapie und Brachytherapie) - Brachytherapie - Alle Anwendungsgebiete",
+            },
+            {
+              abbrev: "2.2.2.2",
+              desc: "Strahlenbehandlung (Teletherapie und Brachytherapie) - Brachytherapie - Anwendung umschlossener Strahler zur Hautbehandlung oder Augenbehandlung (Augentumortherapie)",
+            },
+            {
+              abbrev: "2.2.2.3",
+              desc: "Strahlenbehandlung (Teletherapie und Brachytherapie) - Brachytherapie - Organspezifische Anwendungen mit umschlossenen Strahlern (z. B. Prostata, Gehirn)",
+            },
+            {
+              abbrev: "2.2.3",
+              desc: "Strahlenbehandlung (Teletherapie und Brachytherapie) - Teletherapie (Beschleuniger und Gammabestrahlungseinrichtungen)",
+            },
+            {
+              abbrev: "2.2.4",
+              desc: "Strahlenbehandlung (Teletherapie und Brachytherapie) - Endovaskuläre Strahlentherapie",
+            },
+          ],
+          2011: [
+            {
+              abbrev: "2.1.1",
+              desc: "Offene radioaktive Stoffe - Gesamtgebiet (Diagnostik und Therapie)",
+            },
+            {
+              abbrev: "2.1.2",
+              desc: "Offene radioaktive Stoffe - Diagnostik (einschließlich tomographischer Techniken (PET, SPECT))",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Diagnostik - Zentralnervensystem",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Diagnostik - Skelett und Gelenksystem",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Diagnostik - kardiovaskuläres System",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Diagnostik - Gastrointestinaltrakt",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Diagnostik - Respirationssystem",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Diagnostik - Urogenitalsystem",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Diagnostik - endokrine Organe",
+            },
+            {
+              abbrev: "2.1.3",
+              desc: "Offene radioaktive Stoffe - Organbezogene Diagnostik - hämapoetisches und lymphatisches System (einschließlich Onkologie und Entzündungsdiagnostik)",
+            },
+            {
+              abbrev: "2.1.4",
+              desc: "Offene radioaktive Stoffe - Bildgebende nuklearmedizinische Diagnostik (z. B. PET/CT; ohne Schilddrüse und in-vitroDiagnostik) für Personen, die die erforderliche Fachkunde im Strahlenschutz für das Gesamtgebiet der Röntgendiagnostik nach RöV bereits erworben haben",
+            },
+            {
+              abbrev: "2.1.5",
+              desc: "Offene radioaktive Stoffe - Therapie (nur in Verbindung mit Nr. 2.1.2)",
+            },
+            {
+              abbrev: "2.1.6",
+              desc: "Offene radioaktive Stoffe - Endoluminale, endovaskuläre und endokavitäre Strahlentherapie mit offenen radioaktiven Stoffen (z. B. SIRT, RSO, ReBallonkatheter) ",
+            },
+            {
+              abbrev: "2.2.1",
+              desc: "Strahlenbehandlungen (Teletherapie und Brachytherapie) - Gesamtgebiet der Strahlenbehandlungen",
+            },
+            {
+              abbrev: "2.2.2",
+              desc: "Strahlenbehandlungen (Teletherapie und Brachytherapie) - Brachytherapie",
+            },
+            {
+              abbrev: "2.2.3",
+              desc: "Strahlenbehandlungen (Teletherapie und Brachytherapie) - Anwendung umschlossener radioaktiver Stoffe zur permanenten Implantation",
+            },
+            {
+              abbrev: "2.2.4",
+              desc: "Strahlenbehandlungen (Teletherapie und Brachytherapie) - Endovaskuläre Strahlentherapie mit umschlossenen radioaktiven Stoffen",
+            },
+            {
+              abbrev: "2.2.5.1",
+              desc: "Strahlenbehandlungen (Teletherapie und Brachytherapie) - Teletherapie (Anlagen zur Erzeugung ionisierender Strahlen und Gamma-Bestrahlungsvorrichtungen) - Gesamtgebiet Teletherapie",
+            },
+            {
+              abbrev: "2.2.5.2",
+              desc: "Strahlenbehandlungen (Teletherapie und Brachytherapie) - Teletherapie (Anlagen zur Erzeugung ionisierender Strahlen und Gamma-Bestrahlungsvorrichtungen) - Organspezifische Anwendungen (z. B. Gehirn)",
+            },
+            {
+              abbrev: "2.2.5.3",
+              desc: "Strahlenbehandlungen (Teletherapie und Brachytherapie) - Teletherapie (Anlagen zur Erzeugung ionisierender Strahlen und Gamma-Bestrahlungsvorrichtungen) - Neue Anwendungen (z.B. Therapien mit Partikelstrahlung)",
+            },
+            {
+              abbrev: "2.2.6",
+              desc: "Therapieplanung mittels CT und für die bildgeführte Strahlentherapie (IGRT mit Röntgeneinrichtungen) sowie Simulation und Verifikation (siehe auch Rö11 und Rö12)",
+            },
+          ],
+        },
+        Röntgenanwendung: {
+          1987: [
+            { abbrev: "4.1.1.1", desc: "Gesamtgebiet der Röntgendiagnostik" },
+            { abbrev: "4.1.1.2", desc: "Röntgendiagnostik der Extremitäten" },
+            { abbrev: "4.1.1.3", desc: "Röntgendiagnostik des Schädels" },
+
+            {
+              abbrev: "4.1.1.3",
+              desc: "Nur Röntgendiagnostik des Gesichtsschädels und der Nasennebenhöhlen",
+            },
+            {
+              abbrev: "4.1.1.4",
+              desc: "Röntgendiagnostik der Extremitäten und Notfalldiagnostik des Schädels, der Wirbelsäule, des Thorax und des Abdomens",
+            },
+            {
+              abbrev: "4.1.1.5",
+              desc: "Röntgendiagnostik des gesamten Skeletts",
+            },
+            { abbrev: "4.1.1.6", desc: "Röntgendiagnostik des Thorax" },
+            { abbrev: "4.1.1.7", desc: "Röntgendiagnostik des Harntraktes" },
+            { abbrev: "4.1.1.8", desc: "Röntgendiagnostik der inneren Organe" },
+            {
+              abbrev: "4.1.1.9",
+              desc: "Röntgendiagnostik des gesamten Skeletts und des Thorax",
+            },
+            {
+              abbrev: "4.1.1.10",
+              desc: "Röntgendiagnostik des gesamten Skeletts und der inneren Organe",
+            },
+            {
+              abbrev: "4.1.1.11",
+              desc: "Computertomographie (abgesehen von 4.1.1.1 zusätzlich zu den übrigen Positionen)",
+            },
+            { abbrev: "4.1.1.12", desc: "Mammographie " },
+            {
+              abbrev: "1.",
+              desc: "Röntgentherapie - Gesamtgebiet der Röntgentherapie in der Medizin ",
+            },
+            {
+              abbrev: "2.",
+              desc: "Röntgentherapie - Weichstrahl-, Grenzstrahl- und Nahbestrahlungstherapie ",
+            },
+            {
+              abbrev: "3.",
+              desc: "Röntgentherapie – alle anderen Therapieformen mit Röntgenstrahlen",
+            },
+          ],
+          1990: [
+            { abbrev: "4.1.1.1", desc: "Gesamtgebiet der Röntgendiagnostik" },
+            {
+              abbrev: "4.1.1.2",
+              desc: "Notfalldiagnostik (Extremitäten, Schädel, Wirbelsäule, Thorax, Abdomen)",
+            },
+            { abbrev: "4.1.1.3", desc: "Röntgendiagnostik des Thorax" },
+            { abbrev: "4.1.1.4", desc: "Röntgendiagnostik der Extremitäten" },
+            { abbrev: "4.1.1.5", desc: "Röntgendiagnostik des Schädels" },
+            {
+              abbrev: "4.1.1.6",
+              desc: "Röntgendiagnostik des gesamten Harntraktes und der Geschlechtsorgane",
+            },
+            {
+              abbrev: "4.1.1.6",
+              desc: "Röntgendiagnostik des gesamten Harntraktes ",
+            },
+            {
+              abbrev: "4.1.1.6",
+              desc: "Röntgendiagnostik der Geschlechtsorgane",
+            },
+            {
+              abbrev: "4.1.1.7",
+              desc: "Röntgendiagnostik des gesamten Schädels",
+            },
+            { abbrev: "4.1.1.8", desc: "Röntgendiagnostik des Abdomens" },
+            {
+              abbrev: "4.1.1.9",
+              desc: "Röntgendiagnostik des Gesichtsschädels und der Nasennebenhöhlen",
+            },
+            { abbrev: "4.1.1.10", desc: "Mammographie" },
+            {
+              abbrev: "4.1.1.11",
+              desc: "Röntgendiagnostik eines speziellen Organsystems",
+            },
+            {
+              abbrev: "4.1.1.12",
+              desc: "Computertomographie (zusätzlich zu den anderen Positionen)",
+            },
+            {
+              abbrev: "1.",
+              desc: "Röntgentherapie - Gesamtgebiet der Röntgentherapie in der Medizin ",
+            },
+            {
+              abbrev: "2.",
+              desc: "Röntgentherapie - Röntgentherapie in einem Teilgebiet",
+            },
+            {
+              abbrev: "3.",
+              desc: "Röntgentherapie - Weichstrahl-, Grenzstrahl- und Nahbestrahlungstherapie",
+            },
+          ],
+          2005: [
+            {
+              abbrev: "Rö1",
+              desc: "Gesamtbereich der Röntgendiagnostik einschließlich Computertomographie (CT)– ohne Rö3.6",
+            },
+            {
+              abbrev: "Rö2",
+              desc: "Notfalldiagnostik bei Erwachsenen und Kindern – Röntgendiagnostik ohne CT im Rahmen der Erstversorgung: Schädel-, Stamm- und Extremitätenskelett, Thorax, Abdomen",
+            },
+            {
+              abbrev: "Rö3.1",
+              desc: "Röntgendiagnostik eines Organsystems/Anwendungsgebietes bei Erwachsenen sowie Kindern (bei Kindern mit den zusätzlichen Anforderungen nach Rö6) - Skelett (Schädel, Stamm- und Extremitätenskelett in angemessener Gewichtung)",
+            },
+
+            {
+              abbrev: "Rö3.1",
+              desc: "Röntgendiagnostik eines Organsystems/Anwendungsgebietes bei Erwachsenen sowie Kindern (bei Kindern mit den zusätzlichen Anforderungen nach Rö6) - Schädel",
+            },
+            {
+              abbrev: "Rö3.1",
+              desc: "Röntgendiagnostik eines Organsystems/Anwendungsgebietes bei Erwachsenen sowie Kindern (bei Kindern mit den zusätzlichen Anforderungen nach Rö6) - Extremitätenskelett",
+            },
+            {
+              abbrev: "Rö3.1",
+              desc: "Röntgendiagnostik eines Organsystems/Anwendungsgebietes bei Erwachsenen sowie Kindern (bei Kindern mit den zusätzlichen Anforderungen nach Rö6) - Neuralachse",
+            },
+            {
+              abbrev: "Rö3.2",
+              desc: "Röntgendiagnostik eines Organsystems/Anwendungsgebietes bei Erwachsenen sowie Kindern (bei Kindern mit den zusätzlichen Anforderungen nach Rö6) - Thorax (ohne Rö3.4, Rö3.5 und Rö3.6)",
+            },
+
+            {
+              abbrev: "Rö3.3",
+              desc: "Röntgendiagnostik eines Organsystems/Anwendungsgebietes bei Erwachsenen sowie Kindern (bei Kindern mit den zusätzlichen Anforderungen nach Rö6) - Abdomen",
+            },
+            {
+              abbrev: "Rö3.4",
+              desc: "Röntgendiagnostik eines Organsystems/Anwendungsgebietes bei Erwachsenen sowie Kindern (bei Kindern mit den zusätzlichen Anforderungen nach Rö6) - Mamma",
+            },
+            {
+              abbrev: "Rö3.5",
+              desc: "Röntgendiagnostik eines Organsystems/Anwendungsgebietes bei Erwachsenen sowie Kindern (bei Kindern mit den zusätzlichen Anforderungen nach Rö6) - Gefäßsystem (periphere/zentrale Gefäße ohne Rö3.6)",
+            },
+            {
+              abbrev: "Rö3.6",
+              desc: "Röntgendiagnostik eines Organsystems/Anwendungsgebietes bei Erwachsenen sowie Kindern (bei Kindern mit den zusätzlichen Anforderungen nach Rö6) - Gefäßsystem des Herzens",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich - Schädeldiagnostik in der HNO ",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich - Schädeldiagnostik in der Mund-, Kiefer- und Gesichtschirurgie",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich - durchleuchtungsgestützte Endoskopie",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich - einfache intraoperative Röntgendiagnostik",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich - Thoraxdiagnostik auf der Intensivstation",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich - Knochendichtemessung",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich - weibliche Genitalorgane",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich - Nieren und ableitende Harnwege",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich - Venensystem ",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich – Implantation eines zentralen Venenkatheters",
+            },
+            {
+              abbrev: "Rö4",
+              desc: "Röntgendiagnostik in einem sonstigen begrenzten Anwendungsbereich – bisher noch nicht konkretisierter Anwendungsbereich",
+            },
+            {
+              abbrev: "Rö5.1",
+              desc: "Computertomographie (CT) bei Erwachsenen und Kindern – nur in Verbindung mit Rö3.1, Rö3.2 und Rö3",
+            },
+            {
+              abbrev: "Rö5.2",
+              desc: "Computertomographie (CT) der Neuralachse – nur in Verbindung mit Rö3.1",
+            },
+            {
+              abbrev: "Rö5.2",
+              desc: "Computertomographie (CT) des Schädels – nur in Verbindung mit Rö3.1",
+            },
+            {
+              abbrev: "Rö6",
+              desc: "Röntgendiagnostik bei Kindern in einem speziellen Anwendungsgebiet bzw. mit speziellen Fragestellungen (z. B. orthopädische oder urologische Fragestellungen) in Verbindung mit Rö3 oder Rö4",
+            },
+            {
+              abbrev: "Rö7",
+              desc: "Anwendung von Röntgenstrahlung bei fluoroskopischen Interventionen an einem Organsystem – nur in Verbindung mit Rö1, Rö4 oder einem Anwendungsgebiet aus Rö3",
+            },
+            {
+              abbrev: "Rö8",
+              desc: "Röntgendiagnostik einschließlich CT für Personen mit Fachkunde für das Gesamtgebiet „offene radioaktive Stoffe – Diagnostik und Therapie“ – umfasst die Anwendungsgebiete Rö3.1, Rö3.2, Rö3.3 und Rö5.",
+            },
+            {
+              abbrev: "Rö9.1",
+              desc: "Digitale Volumentomographie (DVT) und sonstige tomographische Verfahren zur Hochkontrastbildgebung außerhalb der Zahnheilkunde, ohne CT – nur in Verbindung mit dem jeweiligen Organsystem/ Anwendungsgebiet aus Rö3 oder Rö4 - DVT im Bereich der Hals-Nasen-Ohren-Heilkunde",
+            },
+            {
+              abbrev: "Rö9.2",
+              desc: "Digitale Volumentomographie (DVT) und sonstige tomographische Verfahren zur Hochkontrastbildgebung außerhalb der Zahnheilkunde, ohne CT – nur in Verbindung mit dem jeweiligen Organsystem/ Anwendungsgebiet aus Rö3 oder Rö4 - Sonstige tomographische Verfahren ohne CT – z.B. Cone-BeamVerfahren, 3D-Bildgebung an Skelett, Gefäßen oder Organen mit fluoroskopischen C-Bögen",
+            },
+            {
+              abbrev: "Rö1",
+              desc: "Knochendichtemessung mit Röntgenstrahlung – mittels DualRöntgen-Absorptiometrie (DXA/DEXA) oder periphere quantitative Computertomographie (pQCT), ohne Computertomographie (QCT)",
+            },
+
+            {
+              abbrev: "Rö1",
+              desc: "CT und sonstige tomographische Verfahren zur Therapieplanung und Verifikation sowie für die bildgeführte Strahlentherapie",
+            },
+            {
+              abbrev: "Rö1",
+              desc: "Simulation und Verifikation mittels Fluoroskopie und Radiographie",
+            },
+            { abbrev: "Rö13.1", desc: "Röntgentherapie – perkutan" },
+            {
+              abbrev: "Rö13.2",
+              desc: "Röntgentherapie – intraoperativ, endoluminal und endokavitär",
+            },
+          ],
+        },
+      };
+
+      // ----------------------------------------------
+      // 2) DOM elements we care about
+      // ----------------------------------------------
+      const radioStrahlenschutz = document.getElementById(
+        "radio_strahlenschutz"
+      );
+      const radioRoentgen = document.getElementById("radio_roentgen");
+      const containerStrahl = document.getElementById(
+        "container_strahlenschutz"
+      );
+      const containerRoentgen = document.getElementById("container_roentgen");
+
+      const qualificationsContainer = document.getElementById(
+        "qualificationsContainer"
+      );
+      const descSelect = document.getElementById("qualificationDesc");
+      const abbrevSelect = document.getElementById("qualificationAbbrev");
+
+      // ----------------------------------------------
+      // 3) Show/hide sub-level containers
+      // ----------------------------------------------
+      document.addEventListener("DOMContentLoaded", function () {
+        // When top-level "Strahlenschutz" is picked
+        radioStrahlenschutz.addEventListener("change", function () {
+          if (radioStrahlenschutz.checked) {
+            containerStrahl.style.display = "block";
+            containerRoentgen.style.display = "none";
+            // Clear out any sub-level selections from the other group
+            resetRadioGroup("roentgen_year");
+            // Hide the qualification container
+            qualificationsContainer.classList.add("hidden");
+          }
+        });
+
+        // When top-level "Röntgenanwendung" is picked
+        radioRoentgen.addEventListener("change", function () {
+          if (radioRoentgen.checked) {
+            containerStrahl.style.display = "none";
+            containerRoentgen.style.display = "block";
+            // Clear out any sub-level selections from the other group
+            resetRadioGroup("strahlenschutz_year");
+            // Hide the qualification container
+            qualificationsContainer.classList.add("hidden");
+          }
+        });
+
+        // Add event listeners to each Strahlenschutz-year radio
+        const strahlenschutzRadios = document.querySelectorAll(
+          'input[name="strahlenschutz_year"]'
+        );
+        strahlenschutzRadios.forEach((radio) => {
+          radio.addEventListener("change", onSublevelChange);
+        });
+
+        // Add event listeners to each Röntgen-year radio
+        const roentgenRadios = document.querySelectorAll(
+          'input[name="roentgen_year"]'
+        );
+        roentgenRadios.forEach((radio) => {
+          radio.addEventListener("change", onSublevelChange);
+        });
+      });
+
+      /**
+       * Called whenever a sub-level radio changes (e.g. picking 1979, 1992, 1987, etc.)
+       */
+      function onSublevelChange() {
+        // Figure out which top-level is active
+        const topLevel = radioStrahlenschutz.checked
+          ? "Strahlenschutz"
+          : "Röntgenanwendung";
+
+        // Figure out which sub-level year is checked
+        let yearRadioName =
+          topLevel === "Strahlenschutz"
+            ? "strahlenschutz_year"
+            : "roentgen_year";
+        let checkedRadio = document.querySelector(
+          `input[name="${yearRadioName}"]:checked`
+        );
+        if (!checkedRadio) {
+          // No sub-level year chosen yet
+          qualificationsContainer.classList.add("hidden");
+          return;
+        }
+
+        let chosenYear = checkedRadio.value; // e.g. "1979", "2005", etc.
+
+        // Now we load the data from dataMap for this combination
+        let qualifications = dataMap[topLevel][chosenYear];
+        if (!qualifications) {
+          console.error("No data for", topLevel, chosenYear);
+          qualificationsContainer.classList.add("hidden");
+          return;
+        }
+
+        // We have an array of {abbrev, desc} for the selected combination
+        // Show the container that holds the dropdown(s)
+        qualificationsContainer.classList.remove("hidden");
+
+        // Clear the existing <select> options
+        // (but keep the first placeholder <option>)
+        descSelect.innerHTML = '<option value=""></option>';
+        abbrevSelect.innerHTML =
+          '<option value="">-- keine Auswahl --</option>';
+
+        // Populate the selects
+        qualifications.forEach((item) => {
+          // Full description
+          const optDesc = document.createElement("option");
+          optDesc.value = item.desc;
+          optDesc.text = item.desc;
+          descSelect.appendChild(optDesc);
+
+          // Abbreviation
+          const optAbbrev = document.createElement("option");
+          optAbbrev.value = item.abbrev;
+          optAbbrev.text = item.abbrev;
+          abbrevSelect.appendChild(optAbbrev);
+        });
+
+        // If you're using Select2, re-initialize or refresh it here:
+        if ($("#qualificationDesc").data("select2")) {
+          $("#qualificationDesc").val(null).trigger("change"); // reset
+          $("#qualificationDesc").trigger("change.select2"); // refresh display
+        }
+        if ($("#qualificationAbbrev").data("select2")) {
+          $("#qualificationAbbrev").val("").trigger("change");
+          $("#qualificationAbbrev").trigger("change.select2");
+        }
+      }
+
+      /**
+       * onDescChange: user picks a description, we set the abbreviation accordingly
+       */
+      function onDescChange() {
+        const selectedDesc = descSelect.value;
+        // Which top-level is active?
+        const topLevel = radioStrahlenschutz.checked
+          ? "Strahlenschutz"
+          : "Röntgenanwendung";
+        // Which sub-level year is chosen?
+        let yearRadioName =
+          topLevel === "Strahlenschutz"
+            ? "strahlenschutz_year"
+            : "roentgen_year";
+        let year = document.querySelector(
+          `input[name="${yearRadioName}"]:checked`
+        ).value;
+
+        const qualifications = dataMap[topLevel][year];
+        let foundItem = qualifications.find((q) => q.desc === selectedDesc);
+        if (foundItem) {
+          abbrevSelect.value = foundItem.abbrev;
+          // If also using Select2 on abbreviation:
+          // $("#qualificationAbbrev").trigger("change.select2");
+        } else {
+          abbrevSelect.value = "";
+        }
+      }
+
+      /**
+       * onAbbrevChange: user picks an abbreviation, we set the description
+       */
+      function onAbbrevChange() {
+        const selectedAbbrev = abbrevSelect.value;
+        // Which top-level is active?
+        const topLevel = radioStrahlenschutz.checked
+          ? "Strahlenschutz"
+          : "Röntgenanwendung";
+        // Which sub-level year is chosen?
+        let yearRadioName =
+          topLevel === "Strahlenschutz"
+            ? "strahlenschutz_year"
+            : "roentgen_year";
+        let year = document.querySelector(
+          `input[name="${yearRadioName}"]:checked`
+        ).value;
+
+        const qualifications = dataMap[topLevel][year];
+        let foundItem = qualifications.find((q) => q.abbrev === selectedAbbrev);
+        if (foundItem) {
+          descSelect.value = foundItem.desc;
+          // If using Select2 on description:
+          // $("#qualificationDesc").trigger("change.select2");
+        } else {
+          descSelect.value = "";
+        }
+      }
+
+      /**
+       * Clears both selects (but doesn't un-check the radio buttons).
+       */
+      function clearSelections() {
+        descSelect.value = "";
+        abbrevSelect.value = "";
+        // If using Select2, refresh:
+        if ($("#qualificationDesc").data("select2")) {
+          $("#qualificationDesc").val(null).trigger("change.select2");
+        }
+        if ($("#qualificationAbbrev").data("select2")) {
+          $("#qualificationAbbrev").val("").trigger("change.select2");
+        }
+      }
+
+      /**
+       * Helper: resets all radios in a radio group by name.
+       */
+      function resetRadioGroup(name) {
+        const radios = document.querySelectorAll(`input[name="${name}"]`);
+        radios.forEach((r) => (r.checked = false));
+      }
+    </script>
+
+    <!-- (Optional) jQuery & Select2 if you want searching in the dropdowns -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+      $(document).ready(function () {
+        $("#qualificationDesc").select2({
+          placeholder: "Beschreibung suchen...",
+          allowClear: true,
+        });
+
+        $("#qualificationAbbrev").select2({
+          placeholder: "Abkürzung wählen...",
+          allowClear: true,
+        });
+      });
+    </script>
+  </body>
+</html>
