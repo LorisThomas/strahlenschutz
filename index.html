@@ -852,5 +852,43 @@
         });
       });
     </script>
+    <script>
+  // Function to gather form data and trigger CSV download
+  function downloadCSV() {
+    // For demonstration: collect some example data
+    const topLevel = document.querySelector('input[name="topLevel"]:checked')?.value || "";
+    const year = document.querySelector('input[name="strahlenschutz_year"]:checked')?.value ||
+                 document.querySelector('input[name="roentgen_year"]:checked')?.value || "";
+    const qualificationDesc = document.getElementById("qualificationDesc").value;
+
+    // Create an array of arrays for CSV rows
+    const data = [
+      ["Timestamp", "Top Level", "Year", "Qualification"],
+      [new Date().toISOString(), topLevel, year, qualificationDesc]
+    ];
+
+    // Convert the array to CSV format
+    const csvContent = data.map(row => row.join(",")).join("\n");
+
+    // Create a blob from the CSV string and trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "submissions.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // Attach the downloadCSV function to the submit button's click event
+  document.addEventListener("DOMContentLoaded", function() {
+    const submitButton = document.querySelector("button[type='submit']");
+    submitButton.addEventListener("click", function(event) {
+      event.preventDefault();  // Prevent default form submission if needed
+      downloadCSV();
+    });
+  });
+</script>
   </body>
 </html>
